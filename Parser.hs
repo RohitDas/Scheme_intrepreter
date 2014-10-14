@@ -3,6 +3,8 @@ import System.Environment
 import Control.Monad
 import System.IO
 import Control.Monad.Error
+import Data.IORef
+
 
 --import System.Console.ReadLine
 --import Prelude hiding (unwords)
@@ -242,7 +244,30 @@ runRepl = until_ (== "quit") (readPrompt "Lisp>>> ") evalAndPrint
 
 
 
--------------------------------------------
+--------------------------------------------------------------------------
+
+
+------------------------------- Adding variables --------------------------
+
+type Env = IORef [(String,IORef LispVal)]
+
+nullEnv :: IO Env
+nullEnv = newIORef []
+
+type IOThrowsError = ErrorT LispError IO
+
+liftError :: ThrowsError a -> IOThrowsError a 
+liftError error = case error of
+		       (Left err) -> throwsError err
+		       (Right val) -> return val
+
+runIOThrows :: IOThrowsError String -> IO String
+runIOThrows action = runErrorT (trapError action) >>= return . extractValue
+
+--------------------------------- FINISH ---------------------------------
+
+
+
 
 
 main :: IO ()
